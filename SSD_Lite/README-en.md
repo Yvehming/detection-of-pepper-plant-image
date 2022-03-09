@@ -27,12 +27,13 @@ graph to tflite.
 4. According to the [TensorFlow model document](https://github.com/tensorflow/models/blob/v1.13.0/research/object_detection/g3doc/running_on_mobile_tensorflowlite.md)
    , using toco to transfer of TensorFlow Lite model should install bazel and [Visual C++ build tools 2015](https://download.microsoft.com/download/5/F/7/5F7ACAEB-8363-451F-9425-68A90F98B238/visualcppbuildtools_full.exe) and MSYS2 and build [TensorFlow from source](https://www.tensorflow.org/install/install_sources)
    .When building TensorFlow from source, the compiling process can be use a lot of RAM. If your system is memory-constrained, limit Bazel's RAM usage with: `--local_ram_resources=2048`.
-   
+
+5. If you encounter problems during installation, please turn to github's [issues](https://github.com/tensorflow/tensorflow/issues) for help.
 ## Train models on Windows 10
-After install TensorFlow Object Detection API, 
+After install TensorFlow Object Detection API, please edit config file and run model_main.py for training and evaluating.
 
 ## Convert to tflite
-To convert checkpoint to tflite, we need to create a new virtual environment and build tensorflow from source
+To convert checkpoint to tflite, we need to create a new virtual environment and build tensorflow from source.
 ## Reference
 https://github.com/EdjeElectronics/TensorFlow-Lite-Object-Detection-on-Android-and-Raspberry-Pi
 
