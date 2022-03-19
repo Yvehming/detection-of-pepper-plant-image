@@ -93,7 +93,7 @@ if __name__ == "__main__":
     LABELMAP_NAME = "pepper_class.txt"
     min_conf_threshold = 0.5
     use_TPU = False
-    image_path = 'img/test1.jpg'
+    image_path = 'img/test5.jpg'
 
     # Import TensorFlow libraries
     # If tflite_runtime is installed, import interpreter from tflite_runtime, else import from regular tensorflow
@@ -168,15 +168,15 @@ if __name__ == "__main__":
             label = '%s: %d%%' % (object_name, int(scores[i] * 100))  # Example: 'person: 72%'
             labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)  # Get font size
             label_ymin = max(ymin, labelSize[1] + 10)  # Make sure not to draw label too close to top of window
-            cv2.rectangle(image, (xmin, label_ymin - labelSize[1] - 10),
-                          (xmin + labelSize[0], label_ymin + baseLine - 10), (255, 255, 255),
-                          cv2.FILLED)  # Draw white box to put label text in
-            cv2.putText(image, label, (xmin, label_ymin - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0),
-                        2)  # Draw label text
+            # cv2.rectangle(image, (xmin, label_ymin - labelSize[1] - 10),
+            #               (xmin + labelSize[0], label_ymin + baseLine - 10), (255, 255, 255),
+            #               cv2.FILLED)  # Draw white box to put label text in
+            # cv2.putText(image, label, (xmin, label_ymin - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0),
+            #             2)  # Draw label text
 
     # All the results have been drawn on the image, now display the image
     cv2.imshow('Object detector', image)
-    # cv2.imwrite('result.jpg', image)
+    cv2.imwrite('result.jpg', image)
     # Press any key to continue to next image, or press 'q' to quit
     cv2.waitKey(0)
 

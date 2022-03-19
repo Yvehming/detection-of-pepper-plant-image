@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 # https://blog.csdn.net/lights_joy/article/details/46291229
 box = []
-image_path = 'img/test1.jpg'
+image_path = 'img/test5.jpg'
 class_path = 'pepper_class.txt'
 model_path = 'pepper_detect_2cat_v3.tflite'
 result = tflite_image_detection(class_path, model_path, image_path)
@@ -48,8 +48,16 @@ for k in range(len(contours)):
 # for i in range(2):
 #     closing = cv2.morphologyEx(closing, cv2.MORPH_DILATE, kernel)
 cv2.imshow("origin", src)
+cv2.imwrite("origin.jpg", src)
+cv2.imshow("bin",bin_img)
 cv2.imshow("morph", opening)
+cv2.imwrite("morph.jpg", opening)
+_, contours_1, hierarchy_1 = cv2.findContours(contour_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+cnt = contours_1[0]
+bottommost = tuple(cnt[cnt[:, :, 1].argmax()][0])
+cv2.circle(contour_img, bottommost, 10, (225, 0, 0), 1)
 cv2.imshow("result", contour_img)
+cv2.imwrite("result.jpg",contour_img)
 # cv2.imshow("result", max_area)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
