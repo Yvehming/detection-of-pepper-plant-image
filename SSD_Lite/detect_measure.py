@@ -2,6 +2,8 @@ import os
 import pyrealsense2 as rs
 import cv2
 import numpy as np
+from find_root import find_root
+import time
 
 # Configure depth and color streams
 pipeline = rs.pipeline()
@@ -13,6 +15,8 @@ pipeline_profile = config.resolve(pipeline_wrapper)
 device = pipeline_profile.get_device()
 device_product_line = str(device.get_info(rs.camera_info.product_line))
 
+align_to = rs.stream.color
+align = rs.align(align_to)
 found_rgb = False
 for s in device.sensors:
     if s.get_info(rs.camera_info.name) == 'RGB Camera':
@@ -22,13 +26,12 @@ if not found_rgb:
     print("The demo requires Depth camera with Color sensor")
     exit(0)
 
-# config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
 
 config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 
 # Start streaming
-pipeline.start(config)
-
+profile = pipeline.start(config)
 
 if __name__ == "__main__":
     MODEL_NAME = ""
@@ -66,20 +69,22 @@ if __name__ == "__main__":
     height = input_details[0]['shape'][1]
     width = input_details[0]['shape'][2]
 
-    floating_model = (input_details[0]['dtype'] == np.float32)
-
-    input_mean = 127.5
-    input_std = 127.5
-    frame_rate_calc = 1
-    freq = cv2.getTickFrequency()
     # Loop over every image and perform detection
-
+    time.sleep(2.0)
     # Load image and resize to expected shape [1xHxWx3]
     while True:
-        t1 = cv2.getTickCount()
         frames = pipeline.wait_for_frames()
-        color_frame = frames.get_color_frame()
+        # frames.get_depth_frame() is a 640x360 depth image
+
+        # Align the depth frame to color frame
+        aligned_frames = align.process(frames)
+
+        # Get aligned frames
+        aligned_depth_frame = aligned_frames.get_depth_frame()  # aligned_depth_frame is a 640x480 depth image
+        color_frame = aligned_frames.get_color_frame()
         color_image = np.asanyarray(color_frame.get_data())
+        intr = color_frame.profile.as_video_stream_profile().intrinsics  # 获取相机内参
+        depth_intrin = aligned_depth_frame.profile.as_video_stream_profile().intrinsics  # 获取深度参数（像素坐标系转相机坐标系会用到）
         # image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         imH, imW, _ = color_image.shape
         image_resized = cv2.resize(color_image, (width, height))
@@ -107,30 +112,18 @@ if __name__ == "__main__":
                 xmin = int(max(1, (boxes[i][1] * imW)))
                 ymax = int(min(imH, (boxes[i][2] * imH)))
                 xmax = int(min(imW, (boxes[i][3] * imW)))
+                # cv2.rectangle(frame_show, (xmin, ymin), (xmax, ymax), (10, 255, 0), 2)
+        cv2.imwrite("detect.jpg", frame_show)
 
-                cv2.rectangle(frame_show, (xmin, ymin), (xmax, ymax), (10, 255, 0), 2)
+        coordinate = find_root("detect.jpg")
 
-                # Draw label
-                object_name = labels[int(classes[i])]  # Look up object name from "labels" array using class index
-                label = '%s: %d%%' % (object_name, int(scores[i] * 100))  # Example: 'person: 72%'
-                labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)  # Get font size
-                label_ymin = max(ymin, labelSize[1] + 10)  # Make sure not to draw label too close to top of window
-                cv2.rectangle(frame_show, (xmin, label_ymin - labelSize[1] - 10),
-                              (xmin + labelSize[0], label_ymin + baseLine - 10), (255, 255, 255),
-                              cv2.FILLED)  # Draw white box to put label text in
-                cv2.putText(frame_show, label, (xmin, label_ymin - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0),
-                            2)  # Draw label text
-
-        cv2.putText(frame_show, 'FPS: {0:.2f}'.format(frame_rate_calc), (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2,
-                cv2.LINE_AA)
-        # All the results have been drawn on the image, now display the image
-        cv2.imshow('Object detector', frame_show)
-        t2 = cv2.getTickCount()
-        time1 = (t2 - t1) / freq
-        frame_rate_calc = 1 / time1
-        if cv2.waitKey(1) == ord('q'):
-            break
+        camera_coordinate = np.array(rs.rs2_deproject_pixel_to_point(depth_intrin, [coordinate[0], coordinate[1]],
+                                                                             rs.depth_frame.get_distance(
+                                                                                 aligned_depth_frame, coordinate[0],
+                                                                                 coordinate[1])))
+        print(camera_coordinate*100)
+        break
         # Press any key to continue to next image, or press 'q' to quit
 
         # Clean up
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()

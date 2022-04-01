@@ -46,6 +46,7 @@ def tflite_image_detection(class_path, model_path, image_path):
 
     # Load image and resize to expected shape [1xHxWx3]
     image = cv2.imread(image_path)
+    image = cv2.GaussianBlur(image, (5, 5), 1)  # 高斯滤波
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     imH, imW, _ = image.shape
     image_resized = cv2.resize(image_rgb, (width, height))
@@ -93,7 +94,7 @@ if __name__ == "__main__":
     LABELMAP_NAME = "pepper_class.txt"
     min_conf_threshold = 0.5
     use_TPU = False
-    image_path = 'img/test9.jpg'
+    image_path = 'detect.jpg'
 
     # Import TensorFlow libraries
     # If tflite_runtime is installed, import interpreter from tflite_runtime, else import from regular tensorflow
@@ -132,6 +133,7 @@ if __name__ == "__main__":
 
     # Load image and resize to expected shape [1xHxWx3]
     image = cv2.imread(image_path)
+    image = cv2.GaussianBlur(image, (5, 5), 1)  # 高斯滤波
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     imH, imW, _ = image.shape
     image_resized = cv2.resize(image_rgb, (width, height))
@@ -176,7 +178,7 @@ if __name__ == "__main__":
 
     # All the results have been drawn on the image, now display the image
     cv2.imshow('Object detector', image)
-    cv2.imwrite('result.jpg', image)
+    # cv2.imwrite('result.jpg', image)
     # Press any key to continue to next image, or press 'q' to quit
     cv2.waitKey(0)
 

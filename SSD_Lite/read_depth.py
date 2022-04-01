@@ -59,7 +59,7 @@ clipping_distance = clipping_distance_in_meters / depth_scale
 # The "align_to" is the stream type to which we plan to align depth frames.
 align_to = rs.stream.color
 align = rs.align(align_to)
-
+i = 1
 # Streaming loop
 try:
     while True:
@@ -98,11 +98,14 @@ try:
         cv2.namedWindow('rgb_image', cv2.WINDOW_NORMAL)
         cv2.setMouseCallback('rgb_image', mouse_event)
         cv2.imshow('Align Example', images)
-        cv2.imshow("rgb_image", bg_removed)
+        cv2.imshow("rgb_image", color_image)
         # cv2.imwrite("rgb_image.jpg", bg_removed)
         # cv2.imwrite("depth_image.jpg", depth_colormap)
         key = cv2.waitKey(1)
         # Press esc or 'q' to close the image window
+        if key & 0xFF == ord('s'):
+            cv2.imwrite(str(i)+'.jpg', color_image)
+            i += 1
         if key & 0xFF == ord('q') or key == 27:
             cv2.destroyAllWindows()
             break

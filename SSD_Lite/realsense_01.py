@@ -9,7 +9,7 @@ import pyrealsense2 as rs
 import numpy as np
 import cv2
 
-i = 10
+i = 9
 # Configure depth and color streams
 pipeline = rs.pipeline()
 config = rs.config()
@@ -68,10 +68,13 @@ try:
 
         cv2.imshow("color_image", color_image)
         key = cv2.waitKey(1)
+        if key & 0xFF == ord('s'):
+            cv2.imwrite("rgb" + str(i) + ".jpg", color_image)
+            i += 1
         # Press esc or 'q' to close the image window
         if key & 0xFF == ord('q') or key == 27:
-            # cv2.destroyAllWindows()
-            cv2.imwrite("test" + str(i) + ".jpg", color_image)
+            cv2.destroyAllWindows()
+
             break
 
 finally:
