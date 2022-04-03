@@ -1,8 +1,10 @@
+## 数据分析，绘制出ROI区域的深度信息的三维图
 import os
 import pyrealsense2 as rs
 import cv2
 import numpy as np
-from find_root import find_root
+import matplotlib.pyplot as plt
+from TFLite_detection_image import tflite_image_detection
 import time
 ### realsense的图像噪声较大，对根部感兴趣区的获取存在一定问题，要用realsense拍摄图片，增加数据集
 # Configure depth and color streams
@@ -38,7 +40,12 @@ if __name__ == "__main__":
     GRAPH_NAME = "pepper_detect_2cat_v3.tflite"
     LABELMAP_NAME = "pepper_class.txt"
     min_conf_threshold = 0.5
+    use_TPU = False
+
+
     # Import TensorFlow libraries
+    # If tflite_runtime is installed, import interpreter from tflite_runtime, else import from regular tensorflow
+    # If using Coral Edge TPU, import the load_delegate library
 
     from tflite_runtime.interpreter import Interpreter
     # Get path to current working directory
@@ -65,12 +72,14 @@ if __name__ == "__main__":
     width = input_details[0]['shape'][2]
 
     # Loop over every image and perform detection
-    time.sleep(1.0)
+    time.sleep(2.0)
     # Load image and resize to expected shape [1xHxWx3]
     while True:
         frames = pipeline.wait_for_frames()
-        # frames.get_depth_frame() is a 640x360 depth image
-
+        root_box = []
+        x = []
+        y = []
+        z = []
         # Align the depth frame to color frame
         aligned_frames = align.process(frames)
 
@@ -108,16 +117,40 @@ if __name__ == "__main__":
                 ymax = int(min(imH, (boxes[i][2] * imH)))
                 xmax = int(min(imW, (boxes[i][3] * imW)))
                 # cv2.rectangle(frame_show, (xmin, ymin), (xmax, ymax), (10, 255, 0), 2)
-        # cv2.imwrite("detect.jpg", frame_show)
+        cv2.imwrite("detect.jpg", frame_show)
 
-        coordinate = find_root(color_image)
+        # coordinate = find_root("detect.jpg")
+        box = tflite_image_detection(LABELMAP_NAME, GRAPH_NAME, 'detect.jpg')
+        print(box)
+        for i in range(len(box)):
+            if str(box[i][0]) == 'root':
+                root_box = box[i]
+                root_box.remove(root_box[0])
+        for i in range(root_box[0], root_box[2]+1):
+            for j in range(root_box[1], root_box[3]+1):
+                roi_coordinate = np.array(
+                    rs.rs2_deproject_pixel_to_point(depth_intrin, [i, j],
+                                                    rs.depth_frame.get_distance(
+                                                        aligned_depth_frame, i, j)))
 
-        camera_coordinate = np.array(rs.rs2_deproject_pixel_to_point(depth_intrin, [coordinate[0], coordinate[1]],
-                                                                             rs.depth_frame.get_distance(
-                                                                                 aligned_depth_frame, coordinate[0],
-                                                                                 coordinate[1])))
-        print(camera_coordinate*100)
-        cv2.circle(color_image, (coordinate[0], coordinate[1]), 10, (225, 0, 0), 1)
+                # print(roi_coordinate)
+                x.append(roi_coordinate[0]*100)
+                y.append(roi_coordinate[1]*100)
+                z.append(roi_coordinate[2]*100)
+        fig = plt.figure()
+        print(x)
+        print(y)
+        print(z)
+        # 创建绘图区域
+        ax = plt.axes(projection='3d')
+        # 构建xyz
+
+        ax.scatter3D(x, y, z)
+        ax.set_title('3d Scatter plot')
+        plt.savefig("draw.svg")
+        plt.show()
+
+        cv2.rectangle(color_image, (root_box[0], root_box[1]), (root_box[2], root_box[3]), (10, 255, 0), 2)
         cv2.imshow("color_image", color_image)
         key = cv2.waitKey(0)
         if key & 0xFF == ord('q') or key == 27:

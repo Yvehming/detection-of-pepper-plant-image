@@ -1,16 +1,16 @@
-from TFLite_detection_image import tflite_image_detection
+from TFLite_detection_image import tflite_video_detection
 import os
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 # https://blog.csdn.net/lights_joy/article/details/46291229
 
-def find_root(image_path):
+def find_root(image):
     box = []
-    image = cv2.imread(image_path)
+    image = image
     class_path = 'pepper_class.txt'
     model_path = 'pepper_detect_2cat_v3.tflite'
-    result = tflite_image_detection(class_path, model_path, image_path)
+    result = tflite_video_detection(class_path, model_path, image)
     for i in range(len(result)):
         if str(result[i][0]) == 'root':
             box = result[i]
