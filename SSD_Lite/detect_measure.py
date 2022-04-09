@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 from find_root import find_root
 import time
+
 ### realsense的图像噪声较大，对根部感兴趣区的获取存在一定问题，要用realsense拍摄图片，增加数据集
 # Configure depth and color streams
 pipeline = rs.pipeline()
@@ -35,12 +36,13 @@ profile = pipeline.start(config)
 
 if __name__ == "__main__":
     MODEL_NAME = ""
-    GRAPH_NAME = "pepper_detect_2cat_v3.tflite"
+    GRAPH_NAME = "pepper_detect_2cat_0.5mnet.tflite"
     LABELMAP_NAME = "pepper_class.txt"
     min_conf_threshold = 0.5
     # Import TensorFlow libraries
 
     from tflite_runtime.interpreter import Interpreter
+
     # Get path to current working directory
     CWD_PATH = os.getcwd()
 
@@ -65,7 +67,7 @@ if __name__ == "__main__":
     width = input_details[0]['shape'][2]
 
     # Loop over every image and perform detection
-    time.sleep(1.0)
+    time.sleep(0.3)
     # Load image and resize to expected shape [1xHxWx3]
     while True:
         frames = pipeline.wait_for_frames()
@@ -99,26 +101,35 @@ if __name__ == "__main__":
         # num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
         # Loop over all detections and draw detection box if confidence is above minimum threshold
         # print(classes)
+
         for i in range(len(scores)):
             if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
                 # Get bounding box coordinates and draw box
                 # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
-                ymin = int(max(1, (boxes[i][0] * imH)))
-                xmin = int(max(1, (boxes[i][1] * imW)))
-                ymax = int(min(imH, (boxes[i][2] * imH)))
-                xmax = int(min(imW, (boxes[i][3] * imW)))
-                # cv2.rectangle(frame_show, (xmin, ymin), (xmax, ymax), (10, 255, 0), 2)
-        # cv2.imwrite("detect.jpg", frame_show)
+                if classes[i] == 0:
+                    try:
+                        coordinate = find_root(color_image, GRAPH_NAME)
+                        camera_coordinate = np.array(
+                            rs.rs2_deproject_pixel_to_point(depth_intrin, [coordinate[0], coordinate[1]],
+                                                            rs.depth_frame.get_distance(
+                                                                aligned_depth_frame, coordinate[0],
+                                                                coordinate[1])))
+                        print(camera_coordinate * 100)
+                        cv2.circle(color_image, (coordinate[0], coordinate[1]), 10, (225, 0, 0), 1)
+                        cv2.imshow("color_image", color_image)
+                        key = cv2.waitKey(0)
+                        if key == 27:
+                            cv2.destroyAllWindows()
+                            break
+                    except:
+                        break
+        # coordinate = find_root(color_image, GRAPH_NAME)
+        #
+        # camera_coordinate = np.array(rs.rs2_deproject_pixel_to_point(depth_intrin, [coordinate[0], coordinate[1]],
+        #                                                                      rs.depth_frame.get_distance(
+        #                                                                          aligned_depth_frame, coordinate[0],
+        #                                                                          coordinate[1])))
 
-        coordinate = find_root(color_image)
-
-        camera_coordinate = np.array(rs.rs2_deproject_pixel_to_point(depth_intrin, [coordinate[0], coordinate[1]],
-                                                                             rs.depth_frame.get_distance(
-                                                                                 aligned_depth_frame, coordinate[0],
-                                                                                 coordinate[1])))
-        print(camera_coordinate*100)
-        cv2.circle(color_image, (coordinate[0], coordinate[1]), 10, (225, 0, 0), 1)
-        cv2.imshow("color_image", color_image)
         key = cv2.waitKey(0)
         if key & 0xFF == ord('q') or key == 27:
             cv2.destroyAllWindows()

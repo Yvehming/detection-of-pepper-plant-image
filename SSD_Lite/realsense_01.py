@@ -9,7 +9,7 @@ import pyrealsense2 as rs
 import numpy as np
 import cv2
 
-i = 12
+i = 14
 # Configure depth and color streams
 pipeline = rs.pipeline()
 config = rs.config()

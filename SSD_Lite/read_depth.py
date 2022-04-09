@@ -59,7 +59,7 @@ clipping_distance = clipping_distance_in_meters / depth_scale
 # The "align_to" is the stream type to which we plan to align depth frames.
 align_to = rs.stream.color
 align = rs.align(align_to)
-i = 1
+i = 3
 # Streaming loop
 try:
     while True:

@@ -171,11 +171,11 @@ def tflite_video_detection(class_path, model_path, image):
     return output
 if __name__ == "__main__":
     MODEL_NAME = ""
-    GRAPH_NAME = "pepper_detect_2cat_v3.tflite"
+    GRAPH_NAME = "pepper_detect_2cat_0.5mnet.tflite"
     LABELMAP_NAME = "pepper_class.txt"
     min_conf_threshold = 0.5
     use_TPU = False
-    image_path = 'detect.jpg'
+    image_path = 'img/test8.jpg'
 
     # Import TensorFlow libraries
     # If tflite_runtime is installed, import interpreter from tflite_runtime, else import from regular tensorflow
