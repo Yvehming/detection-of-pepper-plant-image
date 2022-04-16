@@ -1,5 +1,5 @@
 import os
-
+from tflite_runtime.interpreter import Interpreter
 import cv2
 import numpy as np
 
@@ -7,28 +7,15 @@ import numpy as np
 def tflite_image_detection(class_path, model_path, image_path):
     class_box = []
     output = []
-    MODEL_NAME = ""
-    GRAPH_NAME = model_path
-    LABELMAP_NAME = class_path
     min_conf_threshold = 0.5
-    use_TPU = False
     image_path = image_path
-    from tflite_runtime.interpreter import Interpreter
-    # Get path to current working directory
-    CWD_PATH = os.getcwd()
-
-    # Path to .tflite file, which contains the model that is used for object detection
-    PATH_TO_CKPT = os.path.join(CWD_PATH, MODEL_NAME, GRAPH_NAME)
-
-    # Path to label map file
-    PATH_TO_LABELS = os.path.join(CWD_PATH, MODEL_NAME, LABELMAP_NAME)
 
     # Load the label map
-    with open(PATH_TO_LABELS, 'r') as f:
+    with open(class_path, 'r') as f:
         labels = [line.strip() for line in f.readlines()]
 
     # Load the Tensorflow Lite model.
-    interpreter = Interpreter(model_path=PATH_TO_CKPT)
+    interpreter = Interpreter(model_path=model_path)
     interpreter.allocate_tensors()
 
     # Get model details
@@ -91,26 +78,18 @@ def tflite_image_detection(class_path, model_path, image_path):
 def tflite_video_detection(class_path, model_path, image):
     class_box = []
     output = []
-    MODEL_NAME = ""
-    GRAPH_NAME = model_path
-    LABELMAP_NAME = class_path
     min_conf_threshold = 0.5
-    from tflite_runtime.interpreter import Interpreter
-    # Get path to current working directory
     CWD_PATH = os.getcwd()
 
     # Path to .tflite file, which contains the model that is used for object detection
-    PATH_TO_CKPT = os.path.join(CWD_PATH, MODEL_NAME, GRAPH_NAME)
 
-    # Path to label map file
-    PATH_TO_LABELS = os.path.join(CWD_PATH, MODEL_NAME, LABELMAP_NAME)
 
     # Load the label map
-    with open(PATH_TO_LABELS, 'r') as f:
+    with open(class_path, 'r') as f:
         labels = [line.strip() for line in f.readlines()]
 
     # Load the Tensorflow Lite model.
-    interpreter = Interpreter(model_path=PATH_TO_CKPT)
+    interpreter = Interpreter(model_path=model_path)
     interpreter.allocate_tensors()
 
     # Get model details
@@ -175,28 +154,20 @@ if __name__ == "__main__":
     LABELMAP_NAME = "pepper_class.txt"
     min_conf_threshold = 0.5
     use_TPU = False
-    image_path = 'img/test8.jpg'
+    image_path = 'img/test5.jpg'
 
     # Import TensorFlow libraries
     # If tflite_runtime is installed, import interpreter from tflite_runtime, else import from regular tensorflow
     # If using Coral Edge TPU, import the load_delegate library
 
     from tflite_runtime.interpreter import Interpreter
-    # Get path to current working directory
-    CWD_PATH = os.getcwd()
-
-    # Path to .tflite file, which contains the model that is used for object detection
-    PATH_TO_CKPT = os.path.join(CWD_PATH, MODEL_NAME, GRAPH_NAME)
-
-    # Path to label map file
-    PATH_TO_LABELS = os.path.join(CWD_PATH, MODEL_NAME, LABELMAP_NAME)
 
     # Load the label map
-    with open(PATH_TO_LABELS, 'r') as f:
+    with open(LABELMAP_NAME, 'r') as f:
         labels = [line.strip() for line in f.readlines()]
 
     # Load the Tensorflow Lite model.
-    interpreter = Interpreter(model_path=PATH_TO_CKPT)
+    interpreter = Interpreter(model_path=GRAPH_NAME)
     interpreter.allocate_tensors()
 
     # Get model details

@@ -43,7 +43,9 @@ def find_root(image, model_path):
     cnt = contours_1[0]
     bottommost = list(cnt[cnt[:, :, 1].argmax()][0])
     bottommost[0] += box[0]
-    bottommost[1] += box[1]
+    bottommost[1] = box[1] + bottommost[1] - 10
+    cv2.circle(contour_img, (bottommost[0], bottommost[1]), 10, (225, 0, 0), 1)
+    cv2.imshow("roi", contour_img)
     return  bottommost
 if __name__ == "__main__":
     files = os.listdir('img')
@@ -72,7 +74,6 @@ if __name__ == "__main__":
         (thresh, bin_img) = cv2.threshold(np.array(gray_u8, dtype=np.uint8), -1.0, 255, cv2.THRESH_OTSU)
         hist = cv2.calcHist([gray], [0], None, [256], [minVal, maxVal])
         plt.plot(hist)
-        plt.savefig("curve.svg")
         plt.show()
 
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))  # 定义结构元素

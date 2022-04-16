@@ -4,6 +4,14 @@ import cv2
 import numpy as np
 from find_root import find_root
 import time
+from tflite_runtime.interpreter import Interpreter
+
+def update_frame():
+    frames = pipeline.wait_for_frames()
+    aligned_frames = align.process(frames)
+    color_frame = aligned_frames.get_color_frame()
+    color_image = np.asanyarray(color_frame.get_data())
+    return color_image
 
 ### realsense的图像噪声较大，对根部感兴趣区的获取存在一定问题，要用realsense拍摄图片，增加数据集
 # Configure depth and color streams
@@ -39,25 +47,13 @@ if __name__ == "__main__":
     GRAPH_NAME = "pepper_detect_2cat_0.5mnet.tflite"
     LABELMAP_NAME = "pepper_class.txt"
     min_conf_threshold = 0.5
-    # Import TensorFlow libraries
 
-    from tflite_runtime.interpreter import Interpreter
-
-    # Get path to current working directory
-    CWD_PATH = os.getcwd()
-
-    # Path to .tflite file, which contains the model that is used for object detection
-    PATH_TO_CKPT = os.path.join(CWD_PATH, MODEL_NAME, GRAPH_NAME)
-
-    # Path to label map file
-    PATH_TO_LABELS = os.path.join(CWD_PATH, MODEL_NAME, LABELMAP_NAME)
-
-    # Load the label map
-    with open(PATH_TO_LABELS, 'r') as f:
+    # 导入模型和类别
+    with open(LABELMAP_NAME, 'r') as f:
         labels = [line.strip() for line in f.readlines()]
 
     # Load the Tensorflow Lite model.
-    interpreter = Interpreter(model_path=PATH_TO_CKPT)
+    interpreter = Interpreter(model_path=GRAPH_NAME)
     interpreter.allocate_tensors()
 
     # Get model details
@@ -67,7 +63,7 @@ if __name__ == "__main__":
     width = input_details[0]['shape'][2]
 
     # Loop over every image and perform detection
-    time.sleep(0.3)
+    time.sleep(0.5)
     # Load image and resize to expected shape [1xHxWx3]
     while True:
         frames = pipeline.wait_for_frames()
@@ -108,6 +104,7 @@ if __name__ == "__main__":
                 # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
                 if classes[i] == 0:
                     try:
+                        color_image = update_frame()
                         coordinate = find_root(color_image, GRAPH_NAME)
                         camera_coordinate = np.array(
                             rs.rs2_deproject_pixel_to_point(depth_intrin, [coordinate[0], coordinate[1]],
@@ -115,23 +112,19 @@ if __name__ == "__main__":
                                                                 aligned_depth_frame, coordinate[0],
                                                                 coordinate[1])))
                         print(camera_coordinate * 100)
+                        print("测距结束")
                         cv2.circle(color_image, (coordinate[0], coordinate[1]), 10, (225, 0, 0), 1)
                         cv2.imshow("color_image", color_image)
                         key = cv2.waitKey(0)
                         if key == 27:
                             cv2.destroyAllWindows()
                             break
-                    except:
-                        break
-        # coordinate = find_root(color_image, GRAPH_NAME)
-        #
-        # camera_coordinate = np.array(rs.rs2_deproject_pixel_to_point(depth_intrin, [coordinate[0], coordinate[1]],
-        #                                                                      rs.depth_frame.get_distance(
-        #                                                                          aligned_depth_frame, coordinate[0],
-        #                                                                          coordinate[1])))
+                    except IndexError:
+                        print("未检测到ROI")
+                        raise
 
         key = cv2.waitKey(0)
-        if key & 0xFF == ord('q') or key == 27:
+        if key & 0xFF == ord('q'):
             cv2.destroyAllWindows()
             break
         # Press any key to continue to next image, or press 'q' to quit

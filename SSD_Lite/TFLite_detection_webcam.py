@@ -35,29 +35,18 @@ if __name__ == "__main__":
     GRAPH_NAME = "pepper_detect_2cat_0.5mnet.tflite"
     LABELMAP_NAME = "pepper_class.txt"
     min_conf_threshold = 0.5
-    use_TPU = False
 
-
-    # Import TensorFlow libraries
-    # If tflite_runtime is installed, import interpreter from tflite_runtime, else import from regular tensorflow
-    # If using Coral Edge TPU, import the load_delegate library
+    # 导入tflite文件
 
     from tflite_runtime.interpreter import Interpreter
     # Get path to current working directory
-    CWD_PATH = os.getcwd()
-
-    # Path to .tflite file, which contains the model that is used for object detection
-    PATH_TO_CKPT = os.path.join(CWD_PATH, MODEL_NAME, GRAPH_NAME)
-
-    # Path to label map file
-    PATH_TO_LABELS = os.path.join(CWD_PATH, MODEL_NAME, LABELMAP_NAME)
 
     # Load the label map
-    with open(PATH_TO_LABELS, 'r') as f:
+    with open(LABELMAP_NAME, 'r') as f:
         labels = [line.strip() for line in f.readlines()]
 
     # Load the Tensorflow Lite model.
-    interpreter = Interpreter(model_path=PATH_TO_CKPT)
+    interpreter = Interpreter(model_path=GRAPH_NAME)
     interpreter.allocate_tensors()
 
     # Get model details
@@ -80,6 +69,7 @@ if __name__ == "__main__":
         frames = pipeline.wait_for_frames()
         color_frame = frames.get_color_frame()
         color_image = np.asanyarray(color_frame.get_data())
+        color_image = cv2.GaussianBlur(color_image, (5, 5), 1)  # 高斯滤波
         # image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         imH, imW, _ = color_image.shape
         image_resized = cv2.resize(color_image, (width, height))
@@ -120,7 +110,8 @@ if __name__ == "__main__":
                               cv2.FILLED)  # Draw white box to put label text in
                 cv2.putText(frame_show, label, (xmin, label_ymin - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0),
                             2)  # Draw label text
-
+        print(scores)
+        print(classes)
         cv2.putText(frame_show, 'FPS: {0:.2f}'.format(frame_rate_calc), (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2,
                 cv2.LINE_AA)
         # All the results have been drawn on the image, now display the image
