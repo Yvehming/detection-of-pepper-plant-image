@@ -74,7 +74,6 @@ try:
         # Press esc or 'q' to close the image window
         if key & 0xFF == ord('q') or key == 27:
             cv2.destroyAllWindows()
-
             break
 
 finally:

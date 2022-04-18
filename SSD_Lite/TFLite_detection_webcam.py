@@ -69,13 +69,15 @@ if __name__ == "__main__":
         frames = pipeline.wait_for_frames()
         color_frame = frames.get_color_frame()
         color_image = np.asanyarray(color_frame.get_data())
+        frame_show = color_image
+        color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
         color_image = cv2.GaussianBlur(color_image, (5, 5), 1)  # 高斯滤波
         # image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         imH, imW, _ = color_image.shape
         image_resized = cv2.resize(color_image, (width, height))
         input_data = np.expand_dims(image_resized, axis=0)
         # frame_show = cv2.cvtColor(color_image, cv2.COLOR_RGB2BGR)
-        frame_show = color_image
+
         # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
 
         # Perform the actual detection by running the model with the image as input

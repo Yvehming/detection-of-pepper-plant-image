@@ -36,7 +36,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.TFLite_detection_image">
+  <component name="RunManager" selected="Python.detect_measure">
     <configuration name="TFLite_detection_image" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="TensorFlow_Lite_Model" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -144,11 +144,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.detect_measure" />
+        <item itemvalue="Python.find_root" />
+        <item itemvalue="Python.TFLite_detection_webcam" />
         <item itemvalue="Python.TFLite_detection_image" />
         <item itemvalue="Python.read_depth" />
-        <item itemvalue="Python.detect_measure" />
-        <item itemvalue="Python.TFLite_detection_webcam" />
-        <item itemvalue="Python.find_root" />
       </list>
     </recent_temporary>
   </component>

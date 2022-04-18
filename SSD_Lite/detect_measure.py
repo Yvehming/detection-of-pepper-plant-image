@@ -76,6 +76,8 @@ if __name__ == "__main__":
         aligned_depth_frame = aligned_frames.get_depth_frame()  # aligned_depth_frame is a 640x480 depth image
         color_frame = aligned_frames.get_color_frame()
         color_image = np.asanyarray(color_frame.get_data())
+        frame_show = color_image
+        color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
         intr = color_frame.profile.as_video_stream_profile().intrinsics  # 获取相机内参
         depth_intrin = aligned_depth_frame.profile.as_video_stream_profile().intrinsics  # 获取深度参数（像素坐标系转相机坐标系会用到）
         # image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -83,7 +85,7 @@ if __name__ == "__main__":
         image_resized = cv2.resize(color_image, (width, height))
         input_data = np.expand_dims(image_resized, axis=0)
         # frame_show = cv2.cvtColor(color_image, cv2.COLOR_RGB2BGR)
-        frame_show = color_image
+
         # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
 
         # Perform the actual detection by running the model with the image as input
@@ -105,6 +107,8 @@ if __name__ == "__main__":
                 if classes[i] == 0:
                     try:
                         color_image = update_frame()
+                        frame_show = color_image
+                        # color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
                         coordinate = find_root(color_image, GRAPH_NAME)
                         camera_coordinate = np.array(
                             rs.rs2_deproject_pixel_to_point(depth_intrin, [coordinate[0], coordinate[1]],
@@ -113,8 +117,8 @@ if __name__ == "__main__":
                                                                 coordinate[1])))
                         print(camera_coordinate * 100)
                         print("测距结束")
-                        cv2.circle(color_image, (coordinate[0], coordinate[1]), 10, (225, 0, 0), 1)
-                        cv2.imshow("color_image", color_image)
+                        cv2.circle(frame_show, (coordinate[0], coordinate[1]), 10, (225, 0, 0), 1)
+                        cv2.imshow("color_image", frame_show)
                         key = cv2.waitKey(0)
                         if key == 27:
                             cv2.destroyAllWindows()
