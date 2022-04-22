@@ -70,6 +70,7 @@ if __name__ == "__main__":
         color_frame = frames.get_color_frame()
         color_image = np.asanyarray(color_frame.get_data())
         frame_show = color_image
+        # 注意realsense输出的视频流格式为BGR格式，需要进一步转换
         color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
         color_image = cv2.GaussianBlur(color_image, (5, 5), 1)  # 高斯滤波
         # image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -78,18 +79,16 @@ if __name__ == "__main__":
         input_data = np.expand_dims(image_resized, axis=0)
         # frame_show = cv2.cvtColor(color_image, cv2.COLOR_RGB2BGR)
 
-        # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
 
-        # Perform the actual detection by running the model with the image as input
+        # 将图片输入模型中
         interpreter.set_tensor(input_details[0]['index'], input_data)
         interpreter.invoke()
 
-        # Retrieve detection results
+        # 提取出结果，矩形框，类别，得分数
         boxes = interpreter.get_tensor(output_details[0]['index'])[0]  # Bounding box coordinates of detected objects
         classes = interpreter.get_tensor(output_details[1]['index'])[0]  # Class index of detected objects
         scores = interpreter.get_tensor(output_details[2]['index'])[0]  # Confidence of detected objects
-        # num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
-        # Loop over all detections and draw detection box if confidence is above minimum threshold
+
         # print(classes)
         for i in range(len(scores)):
             if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):

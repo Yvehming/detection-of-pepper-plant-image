@@ -79,7 +79,6 @@ def tflite_video_detection(class_path, model_path, image):
     class_box = []
     output = []
     min_conf_threshold = 0.5
-    CWD_PATH = os.getcwd()
 
     # Path to .tflite file, which contains the model that is used for object detection
 
@@ -98,11 +97,6 @@ def tflite_video_detection(class_path, model_path, image):
     height = input_details[0]['shape'][1]
     width = input_details[0]['shape'][2]
 
-    floating_model = (input_details[0]['dtype'] == np.float32)
-
-    input_mean = 127.5
-    input_std = 127.5
-
     # Loop over every image and perform detection
 
     # Load image and resize to expected shape [1xHxWx3]
@@ -112,9 +106,6 @@ def tflite_video_detection(class_path, model_path, image):
     image_resized = cv2.resize(image_rgb, (width, height))
     input_data = np.expand_dims(image_resized, axis=0)
 
-    # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
-    if floating_model:
-        input_data = (np.float32(input_data) - input_mean) / input_std
 
     # Perform the actual detection by running the model with the image as input
     interpreter.set_tensor(input_details[0]['index'], input_data)
@@ -126,6 +117,7 @@ def tflite_video_detection(class_path, model_path, image):
     scores = interpreter.get_tensor(output_details[2]['index'])[0]  # Confidence of detected objects
     # num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
     print(scores)
+    print(classes)
     # Loop over all detections and draw detection box if confidence is above minimum threshold
     for i in range(len(scores)):
         if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
@@ -154,7 +146,7 @@ if __name__ == "__main__":
     LABELMAP_NAME = "pepper_class.txt"
     min_conf_threshold = 0.5
     use_TPU = False
-    image_path = 'img/test5.jpg'
+    image_path = 'detect.jpg'
 
     # Import TensorFlow libraries
     # If tflite_runtime is installed, import interpreter from tflite_runtime, else import from regular tensorflow

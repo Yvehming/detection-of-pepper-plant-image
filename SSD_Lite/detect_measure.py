@@ -2,9 +2,12 @@ import os
 import pyrealsense2 as rs
 import cv2
 import numpy as np
-from find_root import find_root
+from find_root import detect_root
 import time
 from tflite_runtime.interpreter import Interpreter
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
 
 def update_frame():
     frames = pipeline.wait_for_frames()
@@ -18,22 +21,9 @@ def update_frame():
 pipeline = rs.pipeline()
 config = rs.config()
 
-# Get device product line for setting a supporting resolution
-pipeline_wrapper = rs.pipeline_wrapper(pipeline)
-pipeline_profile = config.resolve(pipeline_wrapper)
-device = pipeline_profile.get_device()
-device_product_line = str(device.get_info(rs.camera_info.product_line))
-
 align_to = rs.stream.color
 align = rs.align(align_to)
 found_rgb = False
-for s in device.sensors:
-    if s.get_info(rs.camera_info.name) == 'RGB Camera':
-        found_rgb = True
-        break
-if not found_rgb:
-    print("The demo requires Depth camera with Color sensor")
-    exit(0)
 
 config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
 
@@ -63,18 +53,19 @@ if __name__ == "__main__":
     width = input_details[0]['shape'][2]
 
     # Loop over every image and perform detection
-    time.sleep(0.5)
+    time.sleep(1.0)
     # Load image and resize to expected shape [1xHxWx3]
     while True:
         frames = pipeline.wait_for_frames()
         # frames.get_depth_frame() is a 640x360 depth image
 
-        # Align the depth frame to color frame
+        # RGB图像与深度图像对齐
         aligned_frames = align.process(frames)
 
-        # Get aligned frames
+        # 得到对齐得图像
         aligned_depth_frame = aligned_frames.get_depth_frame()  # aligned_depth_frame is a 640x480 depth image
         color_frame = aligned_frames.get_color_frame()
+        depth_image = np.asanyarray(aligned_depth_frame.get_data())
         color_image = np.asanyarray(color_frame.get_data())
         frame_show = color_image
         color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
@@ -86,35 +77,41 @@ if __name__ == "__main__":
         input_data = np.expand_dims(image_resized, axis=0)
         # frame_show = cv2.cvtColor(color_image, cv2.COLOR_RGB2BGR)
 
-        # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
-
-        # Perform the actual detection by running the model with the image as input
+        # 将图片输入模型中
         interpreter.set_tensor(input_details[0]['index'], input_data)
         interpreter.invoke()
 
-        # Retrieve detection results
+        # 提取出结果，矩形框，类别，得分数
         boxes = interpreter.get_tensor(output_details[0]['index'])[0]  # Bounding box coordinates of detected objects
         classes = interpreter.get_tensor(output_details[1]['index'])[0]  # Class index of detected objects
         scores = interpreter.get_tensor(output_details[2]['index'])[0]  # Confidence of detected objects
-        # num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
-        # Loop over all detections and draw detection box if confidence is above minimum threshold
         # print(classes)
 
         for i in range(len(scores)):
             if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
                 # Get bounding box coordinates and draw box
                 # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
-                if classes[i] == 0:
+                if classes[i] == 1:
                     try:
                         color_image = update_frame()
                         frame_show = color_image
-                        # color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
-                        coordinate = find_root(color_image, GRAPH_NAME)
+                        root = detect_root()
+                        coordinate = root.find_root(color_image, GRAPH_NAME)
+                        # cv2.circle(root.contour_img, (coordinate[0], coordinate[1]), 10, (0, 0, 0), 1)
+                        cv2.imshow("roi", root.contour_img)
                         camera_coordinate = np.array(
                             rs.rs2_deproject_pixel_to_point(depth_intrin, [coordinate[0], coordinate[1]],
                                                             rs.depth_frame.get_distance(
                                                                 aligned_depth_frame, coordinate[0],
                                                                 coordinate[1])))
+                        roi_z = depth_image[root.xmax - 10:root.ymax + 10, root.xmin:root.ymin + 10]
+                        # pd.DataFrame(roi_z).to_csv('sample.csv')
+                        # f, ax = plt.subplots()
+                        # sns.heatmap(roi_z, center=0, square=True, linewidths=1, cmap=plt.get_cmap('Greens'))
+                        # plt.savefig("heatmap.svg")
+                        # plt.show()
+                        # print(roi_z.shape)
+                        # print(roi_z[root.bottom[1], root.bottom[0]])
                         print(camera_coordinate * 100)
                         print("测距结束")
                         cv2.circle(frame_show, (coordinate[0], coordinate[1]), 10, (225, 0, 0), 1)
@@ -133,5 +130,3 @@ if __name__ == "__main__":
             break
         # Press any key to continue to next image, or press 'q' to quit
 
-        # Clean up
-    # cv2.destroyAllWindows()
