@@ -3,16 +3,10 @@ import pyrealsense2 as rs
 import cv2
 import numpy as np
 from find_root import detect_root
+import realsense_init
 import time
 from tflite_runtime.interpreter import Interpreter
 import matplotlib.pyplot as plt
-
-def update_frame():
-    frames = pipeline.wait_for_frames()
-    aligned_frames = align.process(frames)
-    color_frame = aligned_frames.get_color_frame()
-    color_image = np.asanyarray(color_frame.get_data())
-    return color_image
 
 ### realsense的图像噪声较大，对根部感兴趣区的获取存在一定问题，要用realsense拍摄图片，增加数据集
 # Configure depth and color streams
@@ -21,7 +15,6 @@ config = rs.config()
 
 align_to = rs.stream.color
 align = rs.align(align_to)
-found_rgb = False
 
 config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
 
@@ -55,19 +48,21 @@ if __name__ == "__main__":
     while True:
         t1 = cv2.getTickCount()
 
+        # frames = pipeline.wait_for_frames()
+        # # RGB图像与深度图像对齐
+        # aligned_frames = align.process(frames)
         frames = pipeline.wait_for_frames()
-        # RGB图像与深度图像对齐
-        aligned_frames = align.process(frames)
-
-        # 得到对齐得图像
-        aligned_depth_frame = aligned_frames.get_depth_frame()  # aligned_depth_frame is a 640x480 depth image
-        color_frame = aligned_frames.get_color_frame()
-        depth_image = np.asanyarray(aligned_depth_frame.get_data())
+        color_frame = frames.get_color_frame()
         color_image = np.asanyarray(color_frame.get_data())
+        # 得到对齐得图像
+        # aligned_depth_frame = aligned_frames.get_depth_frame()  # aligned_depth_frame is a 640x480 depth image
+        # color_frame = aligned_frames.get_color_frame()
+        # depth_image = np.asanyarray(aligned_depth_frame.get_data())
+        # color_image = np.asanyarray(color_frame.get_data())
         frame_show = color_image
         color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
-        intr = color_frame.profile.as_video_stream_profile().intrinsics  # 获取相机内参
-        depth_intrin = aligned_depth_frame.profile.as_video_stream_profile().intrinsics  # 获取深度参数（像素坐标系转相机坐标系会用到）
+        # intr = color_frame.profile.as_video_stream_profile().intrinsics  # 获取相机内参
+        # depth_intrin = aligned_depth_frame.profile.as_video_stream_profile().intrinsics  # 获取深度参数（像素坐标系转相机坐标系会用到）
         # image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         imH, imW, _ = color_image.shape
         image_resized = cv2.resize(color_image, (width, height))
@@ -104,7 +99,13 @@ if __name__ == "__main__":
         if 'pepper' in object_name:
             if cv2.waitKey(1) == ord('d'):
                 try:
-                    color_image = update_frame()
+                    frames = pipeline.wait_for_frames()
+                    aligned_frames = align.process(frames)
+                    aligned_depth_frame = aligned_frames.get_depth_frame()  # aligned_depth_frame is a 640x480 depth image
+                    color_frame = aligned_frames.get_color_frame()
+                    color_image = np.asanyarray(color_frame.get_data())
+                    intr = color_frame.profile.as_video_stream_profile().intrinsics  # 获取相机内参
+                    depth_intrin = aligned_depth_frame.profile.as_video_stream_profile().intrinsics  # 获取深度参数（像素坐标系转相机坐标系会用到）
                     frame_show = color_image
                     root = detect_root()
                     coordinate = root.find_root(color_image, GRAPH_NAME)
@@ -115,14 +116,6 @@ if __name__ == "__main__":
                                                         rs.depth_frame.get_distance(
                                                             aligned_depth_frame, coordinate[0],
                                                             coordinate[1])))
-                    # roi_z = depth_image[root.xmax - 10:root.ymax + 10, root.xmin:root.ymin + 10]
-                    # pd.DataFrame(roi_z).to_csv('sample.csv')
-                    # f, ax = plt.subplots()
-                    # sns.heatmap(roi_z, center=0, square=True, linewidths=1, cmap=plt.get_cmap('Greens'))
-                    # plt.savefig("heatmap.svg")
-                    # plt.show()
-                    # print(roi_z.shape)
-                    # print(roi_z[root.bottom[1], root.bottom[0]])
                     temp = camera_coordinate.copy()
                     camera_coordinate[0] = temp[0]
                     camera_coordinate[1] = temp[2]
