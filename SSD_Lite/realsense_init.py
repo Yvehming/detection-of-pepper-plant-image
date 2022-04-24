@@ -24,8 +24,8 @@ class camera():
     def read_aligned_image(self):
         frames = self.pipeline.wait_for_frames()
         aligned_frames = self.align.process(frames)
-        aligned_depth_frame = aligned_frames.get_depth_frame()  # aligned_depth_frame is a 640x480 depth image
-        self.depth_intrin = aligned_depth_frame.profile.as_video_stream_profile().intrinsics  # 获取深度参数（像素坐标系转相机坐标系会用到）
+        self.aligned_depth_frame = aligned_frames.get_depth_frame()  # aligned_depth_frame is a 640x480 depth image
+        self.depth_intrin = self.aligned_depth_frame.profile.as_video_stream_profile().intrinsics  # 获取深度参数（像素坐标系转相机坐标系会用到）
         color_frame = aligned_frames.get_color_frame()
         color_image = np.asanyarray(color_frame.get_data())
         return color_image

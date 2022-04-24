@@ -4,30 +4,19 @@ import cv2
 import numpy as np
 from find_root import detect_root
 import realsense_init
+import uart
 import time
 from tflite_runtime.interpreter import Interpreter
 import matplotlib.pyplot as plt
 
 ### realsense的图像噪声较大，对根部感兴趣区的获取存在一定问题，要用realsense拍摄图片，增加数据集
-# Configure depth and color streams
-pipeline = rs.pipeline()
-config = rs.config()
-
-align_to = rs.stream.color
-align = rs.align(align_to)
-
-config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-
-config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
-
-# Start streaming
-profile = pipeline.start(config)
 
 if __name__ == "__main__":
     MODEL_NAME = ""
     GRAPH_NAME = "pepper_detect_2cat_0.5mnet.tflite"
     LABELMAP_NAME = "pepper_class.txt"
     min_conf_threshold = 0.5
+    camera = realsense_init.camera()
     # uart = uart.uart()
     # 导入模型和类别
     with open(LABELMAP_NAME, 'r') as f:
@@ -47,18 +36,7 @@ if __name__ == "__main__":
     # Load image and resize to expected shape [1xHxWx3]
     while True:
         t1 = cv2.getTickCount()
-
-        # frames = pipeline.wait_for_frames()
-        # # RGB图像与深度图像对齐
-        # aligned_frames = align.process(frames)
-        frames = pipeline.wait_for_frames()
-        color_frame = frames.get_color_frame()
-        color_image = np.asanyarray(color_frame.get_data())
-        # 得到对齐得图像
-        # aligned_depth_frame = aligned_frames.get_depth_frame()  # aligned_depth_frame is a 640x480 depth image
-        # color_frame = aligned_frames.get_color_frame()
-        # depth_image = np.asanyarray(aligned_depth_frame.get_data())
-        # color_image = np.asanyarray(color_frame.get_data())
+        color_image = camera.read_rgb_image()
         frame_show = color_image
         color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
         # intr = color_frame.profile.as_video_stream_profile().intrinsics  # 获取相机内参
@@ -96,44 +74,39 @@ if __name__ == "__main__":
                 object_name.append(labels[int(classes[i])])
         print(object_name)
         print(detected_boxes)
-        if 'pepper' in object_name:
-            if cv2.waitKey(1) == ord('d'):
-                try:
-                    frames = pipeline.wait_for_frames()
-                    aligned_frames = align.process(frames)
-                    aligned_depth_frame = aligned_frames.get_depth_frame()  # aligned_depth_frame is a 640x480 depth image
-                    color_frame = aligned_frames.get_color_frame()
-                    color_image = np.asanyarray(color_frame.get_data())
-                    intr = color_frame.profile.as_video_stream_profile().intrinsics  # 获取相机内参
-                    depth_intrin = aligned_depth_frame.profile.as_video_stream_profile().intrinsics  # 获取深度参数（像素坐标系转相机坐标系会用到）
-                    frame_show = color_image
-                    root = detect_root()
-                    coordinate = root.find_root(color_image, GRAPH_NAME)
-                    # cv2.circle(root.contour_img, (coordinate[0], coordinate[1]), 10, (0, 0, 0), 1)
-                    cv2.imshow("roi", root.contour_img)
-                    camera_coordinate = np.array(
-                        rs.rs2_deproject_pixel_to_point(depth_intrin, [coordinate[0], coordinate[1]],
-                                                        rs.depth_frame.get_distance(
-                                                            aligned_depth_frame, coordinate[0],
-                                                            coordinate[1])))
-                    temp = camera_coordinate.copy()
-                    camera_coordinate[0] = temp[0]
-                    camera_coordinate[1] = temp[2]
-                    camera_coordinate[2] = -temp[1]
-                    
-                    print(camera_coordinate * 100)
-                    print("测距结束")
-                    cv2.circle(frame_show, (coordinate[0], coordinate[1]), 10, (225, 0, 0), 1)
-                    cv2.imshow("color_image", frame_show)
-                    key = cv2.waitKey(0)
-                    if key == 27:
-                        cv2.destroyAllWindows()
-                    if key == ord('q'):
-                        cv2.destroyAllWindows()
-                        break
-                except IndexError:
-                    print("未检测到ROI")
-                    raise
+        if 'pepper' in object_name and 'root' in object_name:
+            if (detected_boxes[object_name.index('pepper')][0] + detected_boxes[object_name.index('pepper')][2])/2 > 500:
+                if cv2.waitKey(1) == ord('d'):
+                    try:
+                        color_image = camera.read_aligned_image()
+                        frame_show = color_image
+                        root = detect_root()
+                        coordinate = root.find_root(color_image, GRAPH_NAME)
+                        # cv2.circle(root.contour_img, (coordinate[0], coordinate[1]), 10, (0, 0, 0), 1)
+                        cv2.imshow("roi", root.contour_img)
+                        camera_coordinate = np.array(
+                            rs.rs2_deproject_pixel_to_point(camera.depth_intrin, [coordinate[0], coordinate[1]],
+                                                            rs.depth_frame.get_distance(
+                                                                camera.aligned_depth_frame, coordinate[0],
+                                                                coordinate[1])))
+                        temp = camera_coordinate.copy()
+                        camera_coordinate[0] = temp[0]
+                        camera_coordinate[1] = temp[2]
+                        camera_coordinate[2] = -temp[1]
+                        
+                        print(camera_coordinate * 100)
+                        print("测距结束")
+                        cv2.circle(frame_show, (coordinate[0], coordinate[1]), 10, (225, 0, 0), 1)
+                        cv2.imshow("color_image", frame_show)
+                        key = cv2.waitKey(0)
+                        if key == 27:
+                            cv2.destroyAllWindows()
+                        if key == ord('q'):
+                            cv2.destroyAllWindows()
+                            break
+                    except IndexError:
+                        print("未检测到ROI")
+                        raise
         cv2.imshow("color_image", frame_show)
         t2 = cv2.getTickCount()
         time1 = (t2 - t1) / freq
