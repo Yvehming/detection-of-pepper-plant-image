@@ -19,7 +19,6 @@ class detect_root():
             if str(result[i][0]) == 'root':
                 box = result[i]
                 box.remove(box[0])
-        print(box)
         self.xmin = box.copy()[0]
         self.xmax = box.copy()[1]
         self.ymin = box.copy()[2]
@@ -50,7 +49,7 @@ class detect_root():
         _, contours_1, hierarchy_1 = cv2.findContours(self.contour_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
         cnt = contours_1[0]
         self.bottom = list(cnt[cnt[:, :, 1].argmax()][0])
-        print(self.bottom)
+        # print(self.bottom)
         bottommost = self.bottom.copy()
         bottommost[0] += box[0]
         bottommost[1] = box[1] + bottommost[1] - 10
@@ -107,8 +106,8 @@ if __name__ == "__main__":
         #     closing = cv2.morphologyEx(closing, cv2.MORPH_DILATE, kernel)
         origin = cv2.imread(image_path)
         cv2.imshow("origin", src)
-        # cv2.imwrite("gray.jpg", gray_u8)
-        # cv2.imwrite("origin.jpg", src)
+        cv2.imwrite("gray.jpg", gray_u8)
+        cv2.imwrite("origin.jpg", src)
         cv2.imshow("bin", bin_img)
         cv2.imshow("morph", opening)
         # cv2.imwrite("morph.jpg", opening)

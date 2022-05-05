@@ -116,8 +116,8 @@ def tflite_video_detection(class_path, model_path, image):
     classes = interpreter.get_tensor(output_details[1]['index'])[0]  # Class index of detected objects
     scores = interpreter.get_tensor(output_details[2]['index'])[0]  # Confidence of detected objects
     # num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
-    print(scores)
-    print(classes)
+    # print(scores)
+    # print(classes)
     # Loop over all detections and draw detection box if confidence is above minimum threshold
     for i in range(len(scores)):
         if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     LABELMAP_NAME = "pepper_class.txt"
     min_conf_threshold = 0.5
     use_TPU = False
-    image_path = 'detect.jpg'
+    image_path = 'img/test7.jpg'
 
     # Import TensorFlow libraries
     # If tflite_runtime is installed, import interpreter from tflite_runtime, else import from regular tensorflow
@@ -222,7 +222,7 @@ if __name__ == "__main__":
 
     # All the results have been drawn on the image, now display the image
     cv2.imshow('Object detector', image)
-    # cv2.imwrite('result.jpg', image)
+    cv2.imwrite('result.jpg', image)
     # Press any key to continue to next image, or press 'q' to quit
     cv2.waitKey(0)
 

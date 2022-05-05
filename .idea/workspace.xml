@@ -146,9 +146,9 @@
       <list>
         <item itemvalue="Python.detect_measure" />
         <item itemvalue="Python.TFLite_detection_webcam" />
-        <item itemvalue="Python.read_depth" />
         <item itemvalue="Python.find_root" />
         <item itemvalue="Python.TFLite_detection_image" />
+        <item itemvalue="Python.read_depth" />
       </list>
     </recent_temporary>
   </component>

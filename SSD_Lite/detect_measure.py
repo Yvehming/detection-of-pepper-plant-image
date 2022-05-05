@@ -75,7 +75,8 @@ if __name__ == "__main__":
         print(object_name)
         print(detected_boxes)
         if 'pepper' in object_name and 'root' in object_name:
-            if (detected_boxes[object_name.index('pepper')][0] + detected_boxes[object_name.index('pepper')][2])/2 > 500:
+            # if (detected_boxes[object_name.index('pepper')][0] + detected_boxes[object_name.index('pepper')][2])/2 > 500:
+            if True:
                 if cv2.waitKey(1) == ord('d'):
                     try:
                         color_image = camera.read_aligned_image()
@@ -83,12 +84,23 @@ if __name__ == "__main__":
                         root = detect_root()
                         coordinate = root.find_root(color_image, GRAPH_NAME)
                         # cv2.circle(root.contour_img, (coordinate[0], coordinate[1]), 10, (0, 0, 0), 1)
-                        cv2.imshow("roi", root.contour_img)
                         camera_coordinate = np.array(
                             rs.rs2_deproject_pixel_to_point(camera.depth_intrin, [coordinate[0], coordinate[1]],
                                                             rs.depth_frame.get_distance(
                                                                 camera.aligned_depth_frame, coordinate[0],
                                                                 coordinate[1])))
+                        while camera_coordinate[0] == 0 and camera_coordinate[1] == 0:
+                            color_image = camera.read_aligned_image()
+                            frame_show = color_image
+                            coordinate = root.find_root(color_image, GRAPH_NAME)
+                            # cv2.circle(root.contour_img, (coordinate[0], coordinate[1]), 10, (0, 0, 0), 1)
+                            # cv2.imshow("roi", root.contour_img)
+                            camera_coordinate = np.array(
+                                rs.rs2_deproject_pixel_to_point(camera.depth_intrin, [coordinate[0], coordinate[1]],
+                                                                rs.depth_frame.get_distance(
+                                                                    camera.aligned_depth_frame, coordinate[0],
+                                                                    coordinate[1])))
+                        cv2.imshow("roi", root.contour_img)
                         temp = camera_coordinate.copy()
                         camera_coordinate[0] = temp[0]
                         camera_coordinate[1] = temp[2]
