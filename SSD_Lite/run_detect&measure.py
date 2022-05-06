@@ -75,14 +75,16 @@ if __name__ == "__main__":
         print(object_name)
         print(detected_boxes)
         if 'pepper' in object_name and 'root' in object_name:
-            if 400 < (detected_boxes[object_name.index('pepper')][0] + detected_boxes[object_name.index('pepper')][2])/2 < 450:
-#             if True:
-#                 uart.send_data('[detected]')
-#                 if cv2.waitKey(1) == ord('d'):
+            if 400 < (detected_boxes[object_name.index('pepper')][0] + detected_boxes[object_name.index('pepper')][2]) / 2 < 480:
+                #             if True:
+                #                 uart.send_data('[detected]')
+                #                 if cv2.waitKey(1) == ord('d'):
                 while uart.read_data(3).decode('ascii') != 'ACK':
                     uart.send_data('[1]')
+                print('OK sent')
                 while uart.read_data(3).decode('ascii') != '666':
                     pass
+                print('666 received')
                 time.sleep(0.5)
                 try:
                     color_image = camera.read_aligned_image()
@@ -106,16 +108,16 @@ if __name__ == "__main__":
                                                             rs.depth_frame.get_distance(
                                                                 camera.aligned_depth_frame, coordinate[0],
                                                                 coordinate[1])))
-                    
+
                     temp = camera_coordinate.copy()
                     camera_coordinate[0] = temp[0]
                     camera_coordinate[1] = temp[2]
                     camera_coordinate[2] = -temp[1]
                     camera_coordinate *= 1000
-#                     camera_coordinate = [10.00,200.00,-40.00]
-#                     camera_coordinate[0] = 10.000
-#                     camera_coordinate[1] = 210.000
-#                     camera_coordinate[2] = -20.000
+                    #                     camera_coordinate = [10.00,200.00,-40.00]
+                    #                     camera_coordinate[0] = 10.000
+                    #                     camera_coordinate[1] = 210.000
+                    #                     camera_coordinate[2] = -20.000
                     print(camera_coordinate)
                     print("测距结束")
                     uart.send_data('[' + '%.2f' % camera_coordinate[0] + ']')
@@ -128,14 +130,14 @@ if __name__ == "__main__":
                     cv2.imshow("color_image", frame_show)
                     while uart.read_data(2).decode('ascii') != 'GO':
                         pass
-                    cv2.destroyAllWindows()
-                    time.sleep(1.5)
-#                     key = cv2.waitKey(0)
-#                     if key == 27:
-#                         cv2.destroyAllWindows()
-#                     if key == ord('q'):
-#                         cv2.destroyAllWindows()
-#                         break
+                    # cv2.destroyAllWindows()
+                    time.sleep(1.2)
+                #                     key = cv2.waitKey(0)
+                #                     if key == 27:
+                #                         cv2.destroyAllWindows()
+                #                     if key == ord('q'):
+                #                         cv2.destroyAllWindows()
+                #                         break
                 except IndexError:
                     print("未检测到ROI")
                     raise
@@ -148,5 +150,3 @@ if __name__ == "__main__":
             cv2.destroyAllWindows()
             break
         # Press any key to continue to next image, or press 'q' to quit
-
-
