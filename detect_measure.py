@@ -17,7 +17,7 @@ if __name__ == "__main__":
     LABELMAP_NAME = "pepper_class.txt"
     min_conf_threshold = 0.5
     camera = realsense_init.camera()
-    # uart = uart.uart()
+    uart = uart.uart()
     # 导入模型和类别
     with open(LABELMAP_NAME, 'r') as f:
         labels = [line.strip() for line in f.readlines()]
@@ -75,8 +75,9 @@ if __name__ == "__main__":
         print(object_name)
         print(detected_boxes)
         if 'pepper' in object_name and 'root' in object_name:
-            # if (detected_boxes[object_name.index('pepper')][0] + detected_boxes[object_name.index('pepper')][2])/2 > 500:
+#             if (detected_boxes[object_name.index('pepper')][0] + detected_boxes[object_name.index('pepper')][2])/2 > 500:
             if True:
+                uart.send_data('[detected]')
                 if cv2.waitKey(1) == ord('d'):
                     try:
                         color_image = camera.read_aligned_image()
@@ -105,8 +106,8 @@ if __name__ == "__main__":
                         camera_coordinate[0] = temp[0]
                         camera_coordinate[1] = temp[2]
                         camera_coordinate[2] = -temp[1]
-                        
-                        print(camera_coordinate * 100)
+                        camera_coordinate *= 1000
+                        print(camera_coordinate)
                         print("测距结束")
                         cv2.circle(frame_show, (coordinate[0], coordinate[1]), 10, (225, 0, 0), 1)
                         cv2.imshow("color_image", frame_show)

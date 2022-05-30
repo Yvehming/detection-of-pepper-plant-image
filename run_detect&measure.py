@@ -31,11 +31,9 @@ if __name__ == "__main__":
     output_details = interpreter.get_output_details()
     height = input_details[0]['shape'][1]
     width = input_details[0]['shape'][2]
-    frame_rate_calc = 1
-    freq = cv2.getTickFrequency()
+   
     # Load image and resize to expected shape [1xHxWx3]
     while True:
-        t1 = cv2.getTickCount()
         color_image = camera.read_rgb_image()
         frame_show = color_image
         color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
@@ -67,25 +65,22 @@ if __name__ == "__main__":
                 ymax = int(min(imH, (boxes[i][2] * imH)))
                 xmax = int(min(imW, (boxes[i][3] * imW)))
                 cv2.rectangle(frame_show, (xmin, ymin), (xmax, ymax), (10, 255, 0), 2)
-                cv2.putText(frame_show, 'FPS: {0:.2f}'.format(frame_rate_calc), (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                            (255, 255, 0), 2,
-                            cv2.LINE_AA)
                 detected_boxes.append([xmin, ymin, xmax, ymax])
                 object_name.append(labels[int(classes[i])])
-        print(object_name)
-        print(detected_boxes)
+#         print(object_name)
+#         print(detected_boxes)
         if 'pepper' in object_name and 'root' in object_name:
-            if 400 < (detected_boxes[object_name.index('pepper')][0] + detected_boxes[object_name.index('pepper')][2]) / 2 < 480:
-                #             if True:
-                #                 uart.send_data('[detected]')
-                #                 if cv2.waitKey(1) == ord('d'):
+            if 400 < (detected_boxes[object_name.index('pepper')][0] + detected_boxes[object_name.index('pepper')][2])/2 < 500:
+#             if True:
+#                 uart.send_data('[detected]')
+#                 if cv2.waitKey(1) == ord('d'):
                 while uart.read_data(3).decode('ascii') != 'ACK':
                     uart.send_data('[1]')
-                print('OK sent')
+                print('ACK received')
                 while uart.read_data(3).decode('ascii') != '666':
                     pass
                 print('666 received')
-                time.sleep(0.5)
+                time.sleep(1.0)
                 try:
                     color_image = camera.read_aligned_image()
                     frame_show = color_image
@@ -108,45 +103,44 @@ if __name__ == "__main__":
                                                             rs.depth_frame.get_distance(
                                                                 camera.aligned_depth_frame, coordinate[0],
                                                                 coordinate[1])))
-
+                    
                     temp = camera_coordinate.copy()
-                    camera_coordinate[0] = temp[0]
+                    camera_coordinate[0] = temp[0] -0.03
                     camera_coordinate[1] = temp[2]
                     camera_coordinate[2] = -temp[1]
                     camera_coordinate *= 1000
-                    #                     camera_coordinate = [10.00,200.00,-40.00]
-                    #                     camera_coordinate[0] = 10.000
-                    #                     camera_coordinate[1] = 210.000
-                    #                     camera_coordinate[2] = -20.000
-                    print(camera_coordinate)
+#                     camera_coordinate = [10.00,200.00,-40.00]
+#                     camera_coordinate[0] = 10.000
+#                     camera_coordinate[1] = 210.000
+#                     camera_coordinate[2] = -20.000
+                    print('坐标值:', camera_coordinate)
                     print("测距结束")
                     uart.send_data('[' + '%.2f' % camera_coordinate[0] + ']')
                     time.sleep(0.1)
                     uart.send_data('[' + '%.2f' % camera_coordinate[1] + ']')
                     time.sleep(0.1)
                     uart.send_data('[' + '%.2f' % camera_coordinate[2] + ']')
-                    cv2.circle(frame_show, (coordinate[0], coordinate[1]), 10, (225, 0, 0), 1)
-                    cv2.imshow("roi", root.contour_img)
-                    cv2.imshow("color_image", frame_show)
+#                     cv2.circle(frame_show, (coordinate[0], coordinate[1]), 10, (225, 0, 0), 1)
+#                     cv2.imshow("roi", root.contour_img)
+#                     cv2.imshow("color_image", frame_show)
                     while uart.read_data(2).decode('ascii') != 'GO':
                         pass
-                    # cv2.destroyAllWindows()
-                    time.sleep(1.2)
-                #                     key = cv2.waitKey(0)
-                #                     if key == 27:
-                #                         cv2.destroyAllWindows()
-                #                     if key == ord('q'):
-                #                         cv2.destroyAllWindows()
-                #                         break
+                    time.sleep(1.0)
+                    print('重新检测')
+#                     key = cv2.waitKey(0)
+#                     if key == 27:
+#                         cv2.destroyAllWindows()
+#                     if key == ord('q'):
+#                         cv2.destroyAllWindows()
+#                         break
                 except IndexError:
                     print("未检测到ROI")
                     raise
         cv2.imshow("color_image", frame_show)
-        t2 = cv2.getTickCount()
-        time1 = (t2 - t1) / freq
-        frame_rate_calc = 1 / time1
         # key = cv2.waitKey(0)
         if cv2.waitKey(1) == ord('q'):
             cv2.destroyAllWindows()
             break
         # Press any key to continue to next image, or press 'q' to quit
+
+

@@ -105,6 +105,7 @@ try:
         # Press esc or 'q' to close the image window
         if key & 0xFF == ord('s'):
             cv2.imwrite(str(i)+'.jpg', color_image)
+            cv2.imwrite('depth.jpg', depth_colormap)
             i += 1
         if key & 0xFF == ord('q') or key == 27:
             cv2.destroyAllWindows()

@@ -111,8 +111,8 @@ if __name__ == "__main__":
                               cv2.FILLED)  # Draw white box to put label text in
                 cv2.putText(frame_show, label, (xmin, label_ymin - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0),
                             2)  # Draw label text
-        print(scores)
-        print(classes)
+#         print(scores)
+#         print(classes)
         cv2.putText(frame_show, 'FPS: {0:.2f}'.format(frame_rate_calc), (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2,
                 cv2.LINE_AA)
         # All the results have been drawn on the image, now display the image
