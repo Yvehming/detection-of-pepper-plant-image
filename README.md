@@ -1,9 +1,10 @@
-# TensorFlow Lite on Raspberry-Pi
-## 介绍
-这个仓库包含tensorflow lite在树莓派上的目标检测模型
+# 基于Tensorflow Lite的辣椒苗识别
+同时识别辣椒植株及其感兴趣区。
 
-Model name                                                                                                                                                                                    | 说明  | mAP | FPS
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------: | :----------: | :-----:
-pepper_detect_2cat_v1.tflite                      | 模型为ssd_mobilenet_v1_0.75                  | 88.40%            | 5.8
-pepper_detect_2cat_v2.tflite                      | 模型为ssd_mobilenet_v1_0.5                   | 84.85%            | 9.8
-pepper_detect_2cat_v3.tflite                      | 模型为ssd_mobilenet_v1_0.5，扩充训练集         | 87.97%            | 9.8
+所用模型：SSD_0.5MobileNetv1，由TensorFlow Object Detection API训练和转化得到。
+
+转换为tflite前mAP = 88.03%。
+
+转换为tflite后mAP = 84.12%。
+
+![](img/detected.jpg)
