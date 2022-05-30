@@ -146,7 +146,7 @@ if __name__ == "__main__":
     LABELMAP_NAME = "pepper_class.txt"
     min_conf_threshold = 0.5
     use_TPU = False
-    image_path = 'img/test7.jpg'
+    image_path = 'img/realsense120.jpg'
 
     # Import TensorFlow libraries
     # If tflite_runtime is installed, import interpreter from tflite_runtime, else import from regular tensorflow
@@ -222,7 +222,7 @@ if __name__ == "__main__":
 
     # All the results have been drawn on the image, now display the image
     cv2.imshow('Object detector', image)
-    cv2.imwrite('result.jpg', image)
+    cv2.imwrite('detect result.jpg', image)
     # Press any key to continue to next image, or press 'q' to quit
     cv2.waitKey(0)
 
