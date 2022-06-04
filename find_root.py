@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 # https://blog.csdn.net/lights_joy/article/details/46291229
-
+# 色差法确定施肥点图像坐标
 class detect_root():
     def __init__(self):
         self.class_path = 'pepper_class.txt'
@@ -36,16 +36,22 @@ class detect_root():
         h, w, _ = src.shape
         fsrc = np.array(src, dtype=np.float32) / 255.0
         (b, g, r) = cv2.split(fsrc)
+        # gray = 2.0 * g - b - r
         gray = 1.8 * g - b - r
         (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(gray)
         gray_u8 = np.array((gray - minVal) / (maxVal - minVal) * 255, dtype=np.uint8)
         (thresh, bin_img) = cv2.threshold(np.array(gray_u8, dtype=np.uint8), -1.0, 255, cv2.THRESH_OTSU)
 
+        # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))  # 定义结构元素
+        # dilate = cv2.morphologyEx(bin_img, cv2.MORPH_DILATE, kernel)
+        # closing = cv2.morphologyEx(dilate, cv2.MORPH_CLOSE, kernel)
+        # opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel)
+        # self.contour_img = opening.copy()
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))  # 定义结构元素
-        dilate = cv2.morphologyEx(bin_img, cv2.MORPH_DILATE, kernel)
-        closing = cv2.morphologyEx(dilate, cv2.MORPH_CLOSE, kernel)
-        opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel)
-        self.contour_img = opening.copy()
+        erode = cv2.morphologyEx(bin_img, cv2.MORPH_ERODE, kernel)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (4, 4))  # 定义结构元素
+        dilate = cv2.morphologyEx(erode, cv2.MORPH_DILATE, kernel)
+        self.contour_img = dilate.copy()
         _, contours, hierarchy = cv2.findContours(self.contour_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
         area = []
         for j in range(len(contours)):
@@ -89,6 +95,7 @@ if __name__ == "__main__":
         h, w, _ = src.shape
         fsrc = np.array(src, dtype=np.float32) / 255.0
         (b, g, r) = cv2.split(fsrc)
+        # gray = 2.0 * g - b - r
         gray = 1.8 * g - b - r
         (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(gray)
         gray_u8 = np.array((gray - minVal) / (maxVal - minVal) * 255, dtype=np.uint8)
@@ -97,11 +104,16 @@ if __name__ == "__main__":
         plt.plot(hist)
         plt.show()
 
+        # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))  # 定义结构元素
+        # dilate = cv2.morphologyEx(bin_img, cv2.MORPH_DILATE, kernel)
+        # closing = cv2.morphologyEx(dilate, cv2.MORPH_CLOSE, kernel)
+        # opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel)
+        # contour_img = opening.copy()
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))  # 定义结构元素
-        dilate = cv2.morphologyEx(bin_img, cv2.MORPH_DILATE, kernel)
-        closing = cv2.morphologyEx(dilate, cv2.MORPH_CLOSE, kernel)
-        opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel)
-        contour_img = opening.copy()
+        erode = cv2.morphologyEx(bin_img, cv2.MORPH_ERODE, kernel)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (4, 4))  # 定义结构元素
+        dilate = cv2.morphologyEx(erode, cv2.MORPH_DILATE, kernel)
+        contour_img = dilate.copy()
         _, contours, hierarchy = cv2.findContours(contour_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
         area = []
         for j in range(len(contours)):
@@ -118,7 +130,8 @@ if __name__ == "__main__":
         cv2.imwrite("gray.jpg", gray_u8)
         cv2.imwrite("origin.jpg", src)
         cv2.imshow("bin", bin_img)
-        cv2.imshow("morph", opening)
+        cv2.imshow("morph", dilate)
+        # cv2.imshow("morph", opening)
         # cv2.imwrite("morph.jpg", opening)
         _, contours_1, hierarchy_1 = cv2.findContours(contour_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
         cnt = contours_1[0]

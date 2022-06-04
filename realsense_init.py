@@ -2,6 +2,7 @@ import pyrealsense2 as rs
 import cv2
 import numpy as np
 
+# 深度相机类，包括初始化、读取RGB、深度图
 class camera():
     def __init__(self):
         self.pipeline = rs.pipeline()

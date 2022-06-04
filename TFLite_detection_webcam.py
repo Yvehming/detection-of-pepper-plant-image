@@ -3,6 +3,8 @@ import pyrealsense2 as rs
 import cv2
 import numpy as np
 
+#连接深度相机实时检测
+
 # Configure depth and color streams
 pipeline = rs.pipeline()
 config = rs.config()

@@ -8,7 +8,7 @@ import uart
 import time
 from tflite_runtime.interpreter import Interpreter
 import matplotlib.pyplot as plt
-
+# 与小车通信实时识别和定位
 ### realsense的图像噪声较大，对根部感兴趣区的获取存在一定问题，要用realsense拍摄图片，增加数据集
 
 if __name__ == "__main__":

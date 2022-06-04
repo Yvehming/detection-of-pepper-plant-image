@@ -1,5 +1,6 @@
 import serial
 
+# 串口通信参数设置
 class uart():
     def __init__(self):
         self.ser = serial.Serial(

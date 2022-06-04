@@ -3,7 +3,7 @@ from tflite_runtime.interpreter import Interpreter
 import cv2
 import numpy as np
 
-
+# 检测图片函数
 def tflite_image_detection(class_path, model_path, image_path):
     class_box = []
     output = []
@@ -75,6 +75,8 @@ def tflite_image_detection(class_path, model_path, image_path):
             output.append(class_box)
             class_box = []
     return output
+
+# 检测深度相机的读取到的图片
 def tflite_video_detection(class_path, model_path, image):
     class_box = []
     output = []
@@ -140,6 +142,8 @@ def tflite_video_detection(class_path, model_path, image):
             output.append(class_box)
             class_box = []
     return output
+
+# 检测图片
 if __name__ == "__main__":
     MODEL_NAME = ""
     GRAPH_NAME = "pepper_detect_2cat_0.5mnet.tflite"

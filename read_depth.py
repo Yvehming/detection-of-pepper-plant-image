@@ -2,7 +2,7 @@ import pyrealsense2 as rs
 import numpy as np
 import cv2
 
-
+# 读取对齐后的RGB图上一点对应的三维坐标值
 def mouse_event(event, x, y, flags, param):
     # 通过event判断具体是什么事件，这里是左键按下
     if event == cv2.EVENT_LBUTTONDOWN:
