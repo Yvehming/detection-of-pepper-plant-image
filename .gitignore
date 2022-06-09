@@ -2,4 +2,3 @@ pepper_detect_2cat_0.75mnet.tflite
 pepper_detect_2cat_mnet.tflite
 pepper_training_0.5/tflite_graph.pb
 pepper_training_0.5/tflite_graph.pbtxt
-.ipynb_checkpoints/
